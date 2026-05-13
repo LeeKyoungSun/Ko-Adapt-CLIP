@@ -1,0 +1,26 @@
+# datasets
+datasets/**/images/
+datasets/**/*.zip
+
+# checkpoints
+checkpoints/
+
+# outputs
+outputs/
+
+# logs
+logs/
+
+# python
+__pycache__/
+*.pyc
+
+# mac
+.DS_Store
+
+# notebook
+.ipynb_checkpoints/
+
+# env
+venv/
+.env
