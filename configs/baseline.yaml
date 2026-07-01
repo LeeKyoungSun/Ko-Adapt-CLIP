@@ -1,0 +1,24 @@
+# configs/baseline.yaml
+# CLIP Baseline 실험 기본 설정
+
+model:
+  name: "ViT-B-32"          # 1차 실험: ViT-B-32 / 이후 ViT-L-14 비교
+  pretrained: "openai"
+
+data:
+  mscoco:
+    image_dir: "datasets/mscoco/images"
+    annotation: "datasets/mscoco/annotations/captions_val2014.json"
+  kococo:
+    image_dir: "datasets/kococo/images"
+    annotation: "datasets/kococo/annotations/kococo_val2014.json"
+
+eval:
+  batch_size: 64
+  num_workers: 4
+  k_list: [1, 5, 10]
+  hard_negative_pct: 0.2    # 하위 20% 추출
+
+output:
+  dir: "outputs/"
+  save_embeddings: false     # True로 바꾸면 임베딩 npy 저장 (용량 큼)
