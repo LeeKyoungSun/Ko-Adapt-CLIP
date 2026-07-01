@@ -2,6 +2,22 @@
 datasets/**/images/
 datasets/**/*.zip
 
+# images
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.bmp
+*.tiff
+*.webp
+
+# archives
+*.zip
+*.tar
+*.tar.gz
+*.rar
+*.7z
+
 # checkpoints
 checkpoints/
 
@@ -24,3 +40,6 @@ __pycache__/
 # env
 venv/
 .env
+
+# claude
+CLAUDE.md
