@@ -35,12 +35,12 @@ from scripts.visualize import (
 #경로설정
 PATHS = {
     "en": {
-        "image_dir": ROOT / "datasets/mscoco/images",
+        "image_dir": ROOT / "datasets/mscoco/images/val2014",
         "annotation": ROOT / "datasets/mscoco/annotations/captions_val2014.json",
     },
     "ko": {
         "image_dir": ROOT / "datasets/kococo/images",
-        "annotation": ROOT / "datasets/kococo/annotations/kococo_val2014.json",
+        "annotation": ROOT / "datasets/kococo/annotations/MSCOCO_train_val_Korean.json",
     },
 }
 
@@ -112,7 +112,12 @@ def main(args):
     logger.info(f"출력 디렉토리: {out_dir}")
 
     #모델 로드
-    device = "cuda" if torch.cuda.is_available() else "cpu"
+    if torch.cuda.is_available():
+        device = "cuda"
+    elif torch.backends.mps.is_available():
+        device = "mps"
+    else:
+        device = "cpu"
     logger.info(f"디바이스: {device}")
 
     model, _, preprocess = open_clip.create_model_and_transforms(

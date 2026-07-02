@@ -56,10 +56,24 @@ def analyze_tokenization(
     }
 
 
-def load_captions(annotation_file: str, max_samples: int = None) -> List[str]:
+def load_captions(annotation_file: str, max_samples: int = None, lang: str = "en") -> List[str]:
     with open(annotation_file, "r", encoding="utf-8") as f:
         data = json.load(f)
-    captions = [ann["caption"] for ann in data["annotations"]]
+
+    if isinstance(data, list):
+        # KoCOCO 형식: [{"file_path": ..., "captions": [...], "caption_ko": [...]}, ...]
+        caption_key = "caption_ko" if lang == "ko" else "captions"
+        captions = []
+        for item in data:
+            if "val2014" not in item["file_path"]:
+                continue
+            item_captions = item.get(caption_key) or []
+            if item_captions:
+                captions.append(item_captions[0])
+    else:
+        # 표준 MS-COCO 형식: {"images": [...], "annotations": [...]}
+        captions = [ann["caption"] for ann in data["annotations"]]
+
     if max_samples:
         captions = captions[:max_samples]
     return captions
@@ -71,8 +85,8 @@ def compare_tokenization(
     output_path: str,
     max_samples: int = None,
 ):
-    en_captions = load_captions(en_annotation, max_samples)
-    ko_captions = load_captions(ko_annotation, max_samples)
+    en_captions = load_captions(en_annotation, max_samples, lang="en")
+    ko_captions = load_captions(ko_annotation, max_samples, lang="ko")
 
     en_stats = analyze_tokenization(en_captions, lang="en")
     ko_stats = analyze_tokenization(ko_captions, lang="ko")

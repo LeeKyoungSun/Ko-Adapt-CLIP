@@ -38,6 +38,8 @@ class COCOCaptionDataset(Dataset):
             # KoCOCO 형식: [{"file_path": ..., "id": ..., "captions": [...], "caption_ko": [...]}, ...]
             caption_key = "caption_ko" if lang == "ko" else "captions"
             for item in data:
+                if "val2014" not in item["file_path"]:
+                    continue
                 captions = item.get(caption_key) or []
                 if not captions:
                     continue
