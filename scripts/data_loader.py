@@ -32,21 +32,35 @@ class COCOCaptionDataset(Dataset):
         with open(annotation_file, "r", encoding="utf-8") as f:
             data = json.load(f)
 
-        # image_id → file_name 매핑
-        self.id2file = {img["id"]: img["file_name"] for img in data["images"]}
-
-        # 이미지별 첫 번째 캡션만 사용 (Recall@k 평가 기준)
-        seen = set()
         self.pairs = []
-        for ann in data["annotations"]:
-            iid = ann["image_id"]
-            if iid not in seen:
-                seen.add(iid)
+
+        if isinstance(data, list):
+            # KoCOCO 형식: [{"file_path": ..., "id": ..., "captions": [...], "caption_ko": [...]}, ...]
+            caption_key = "caption_ko" if lang == "ko" else "captions"
+            for item in data:
+                captions = item.get(caption_key) or []
+                if not captions:
+                    continue
                 self.pairs.append({
-                    "image_id": iid,
-                    "file_name": self.id2file[iid],
-                    "caption": ann["caption"],
+                    "image_id": item["id"],
+                    "file_name": item["file_path"],
+                    "caption": captions[0],
                 })
+        else:
+            # 표준 MS-COCO 형식: {"images": [...], "annotations": [...]}
+            id2file = {img["id"]: img["file_name"] for img in data["images"]}
+
+            # 이미지별 첫 번째 캡션만 사용 (Recall@k 평가 기준)
+            seen = set()
+            for ann in data["annotations"]:
+                iid = ann["image_id"]
+                if iid not in seen:
+                    seen.add(iid)
+                    self.pairs.append({
+                        "image_id": iid,
+                        "file_name": id2file[iid],
+                        "caption": ann["caption"],
+                    })
 
         if max_samples:
             self.pairs = self.pairs[:max_samples]
@@ -98,3 +112,27 @@ def get_dataloader(
         num_workers=num_workers,
         pin_memory=True,
     )
+
+
+if __name__ == "__main__":
+    import open_clip
+
+    _, _, preprocess = open_clip.create_model_and_transforms("ViT-B-32", pretrained="openai")
+
+    en_loader = get_dataloader(
+        image_dir="datasets/mscoco/images/val2014",
+        annotation_file="datasets/mscoco/annotations/captions_val2014.json",
+        transform=preprocess, batch_size=4, max_samples=10, num_workers=0, lang="en",
+    )
+    ko_loader = get_dataloader(
+        image_dir="datasets/kococo/images",
+        annotation_file="datasets/kococo/annotations/MSCOCO_train_val_Korean.json",
+        transform=preprocess, batch_size=4, max_samples=10, num_workers=0, lang="ko",
+    )
+
+    en_batch = next(iter(en_loader))
+    ko_batch = next(iter(ko_loader))
+    print("EN 이미지:", en_batch["image"].shape)
+    print("EN 캡션:", en_batch["caption"][0])
+    print("KO 이미지:", ko_batch["image"].shape)
+    print("KO 캡션:", ko_batch["caption"][0])
